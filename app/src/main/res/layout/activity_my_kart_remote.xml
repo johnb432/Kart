@@ -42,7 +42,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <SeekBar
-        android:id="@+id/seekBar2"
+        android:id="@+id/steeringAngle"
         android:layout_width="388dp"
         android:layout_height="38dp"
         android:layout_marginStart="16dp"
@@ -91,7 +91,7 @@
         android:layout_marginStart="79dp"
         android:layout_marginTop="1dp"
         android:rotation="-90"
-        app:layout_constraintStart_toEndOf="@+id/seekBar2"
+        app:layout_constraintStart_toEndOf="@+id/steeringAngle"
         app:layout_constraintTop_toBottomOf="@+id/seekBar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

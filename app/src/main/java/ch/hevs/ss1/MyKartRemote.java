@@ -3,6 +3,7 @@ package ch.hevs.ss1;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 
 import ch.hevs.kart.AbstractKartControlActivity;
 import ch.hevs.kart.Kart;
@@ -43,6 +44,26 @@ public class MyKartRemote extends AbstractKartControlActivity {
                 System.out.println("testing my program");
             }
         });
+
+        //public void setOnSeekBarChangeListener (SeekBar.OnSeekBarChangeListener l)
+        final SeekBar steeringAngle = findViewById(R.id.steeringAngle);
+
+        steeringAngle.OnSeekBarChangeListener test = new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        }; //steeringAngle
     }
 
     @Override
