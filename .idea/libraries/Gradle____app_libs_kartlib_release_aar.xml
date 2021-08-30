@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: ./app/libs/kartlib-release.aar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/67deb653d38bfe22fb6a08e3b5c7aac7/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/67deb653d38bfe22fb6a08e3b5c7aac7/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/67deb653d38bfe22fb6a08e3b5c7aac7/AndroidManifest.xml" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
