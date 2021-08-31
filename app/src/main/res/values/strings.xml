@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Kart</string>
+
+    <string name="zero">0</string>
+
+    <string name="steering">Steering</string>
+    <string name="throttle">Throttle</string>
+    <string name="recenter_steering">Recenter Steering</string>
+    <string name="lights">Head Lights</string>
+
+    <string name="accelerometer">Use Accelerometer</string>
+    <string name="battery">Battery Voltage</string>
 </resources>
