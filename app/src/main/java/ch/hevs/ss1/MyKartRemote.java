@@ -181,7 +181,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
                     }
 
                     if (steeringToggle.isChecked()) {
-                        steeringAngleSlider.setProgress((int) (event.values[1]) * 30 + 300, true);
+                        steeringAngleSlider.setProgress((int) (event.values[1]) * 30 + STEERING_POS_MIDDLE, true);
                     }
                 }
             }
