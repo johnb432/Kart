@@ -20,7 +20,11 @@ import ch.hevs.kart.Kart;
 import ch.hevs.kart.KartStatusRegister;
 import ch.hevs.kart.KartStatusRegisterListener;
 
+// For manifest values, see https://developer.android.com/guide/topics/manifest/activity-element.html#screen
 public class MyKartRemote extends AbstractKartControlActivity {
+    private final int STEERING_POS_MAX = 1000;
+    private final int STEERING_POS_MIDDLE = STEERING_POS_MAX / 2;
+
     private long oldTime = 0;
     private long newTime;
 
@@ -33,12 +37,15 @@ public class MyKartRemote extends AbstractKartControlActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_kart_remote);
 
-        showKartSetupPopup();
-
         @SuppressLint("UseSwitchCompatOrMaterialCode")
         final Switch throttleToggle = findViewById(R.id.throttleToggle);
         @SuppressLint("UseSwitchCompatOrMaterialCode")
         final Switch steeringToggle = findViewById(R.id.steeringToggle);
+
+        @SuppressLint("UseSwitchCompatOrMaterialCode")
+        final Switch revertThrottle = findViewById(R.id.revertThrottle);
+        @SuppressLint("UseSwitchCompatOrMaterialCode")
+        final Switch revertSteering = findViewById(R.id.revertSteering);
 
         final TextView speedDisplay = findViewById(R.id.speedDisplay);
         final TextView throttleDisplay = findViewById(R.id.throttleDisplay);
@@ -55,7 +62,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
             @Override
             public void statusRegisterHasChanged(Kart kart, KartStatusRegister kartStatusRegister, int i) {
                 switch (kartStatusRegister.name()) {
-                    case "HallSensorCounter1": {
+                    case "HallSensorCounter1":
                         newTime = System.nanoTime();
 
                         double speed = 800000000.0 / (newTime - oldTime); // should be in m/s; with 8cm circumference
@@ -72,8 +79,17 @@ public class MyKartRemote extends AbstractKartControlActivity {
                             speedBarPos.setProgress(0, true);
                             speedBarNeg.setProgress((int) speed, true);
                         }
-                    }
-                    break;
+
+                        break;
+                    case "DistanceSensor":
+                        // Distance in cm; see http://wiki.hevs.ch/fsi/index.php5/Kart/sensors/HCSR04
+                        double distance = 0.0017 * i;
+
+                        if (distance < 10) {
+
+                        }
+
+                        break;
 
                     default: {}
                 }
@@ -89,7 +105,12 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
             public void onStartTrackingTouch(SeekBar seekBar) {}
 
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if (revertSteering.isChecked()) {
+                    //kart.setSteeringPosition(STEERING_POS_MIDDLE);
+                    seekBar.setProgress(STEERING_POS_MIDDLE, true);
+                }
+            }
         });
 
         final SeekBar throttleLevelSlider = findViewById(R.id.throttleLevelSlider);
@@ -103,30 +124,51 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
             public void onStartTrackingTouch(SeekBar seekBar) {}
 
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if (revertThrottle.isChecked()) {
+                    //kart.setDriveSpeed(0);
+                    //throttleDisplay.setText(String.format("%d", 0));
+                    seekBar.setProgress(0, true);
+                }
+            }
         });
 
         final Button resetSteering = findViewById(R.id.resetSteering);
         resetSteering.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
-                //kart.resetSteering();
-                kart.setSteeringPosition(300);
-                steeringAngleSlider.setProgress(300, true);
+                kart.resetSteering();
+                //kart.setSteeringPosition(STEERING_POS_MIDDLE);
+                //steeringAngleSlider.setProgress(STEERING_POS_MIDDLE, true);
                 Log.d("resetSteering", "Reset steering");
             }
         });
 
+        // Button to open kart configuration
+        final Button openSettings = findViewById(R.id.openSettings);
+        openSettings.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Code here executes on main thread after user presses button
+                showKartSetupPopup();
+            }
+        });
+
         @SuppressLint("UseSwitchCompatOrMaterialCode")
+        // Switch to turn off all lights
         final Switch lightSwitch = findViewById(R.id.lightSwitch);
         lightSwitch.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
-                kart.toggleLed(0);
-                Log.d("lightSwitch", "Toggled light 0");
+
+                for (int i = 0; i < 4; i++) {
+                    kart.toggleLed(i);
+                }
+
+                Log.d("lightSwitch", "Toggled lights 0-3");
             }
         });
 
+        // Sets up listener for using phone position as input
         final SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensorManager.registerListener(new SensorEventListener() {
             @Override
@@ -164,12 +206,12 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
     @Override
     public void steeringPositionChanged(Kart kart, int i, float v) {
-        if (i <= 300) {
-            steeringBarLeft.setProgress(300 - kart.getSteeringPosition(), true);
+        if (i <= STEERING_POS_MIDDLE) {
+            steeringBarLeft.setProgress(STEERING_POS_MIDDLE - kart.getSteeringPosition(), true);
             steeringBarRight.setProgress(0, true);
         } else {
             steeringBarLeft.setProgress(0, true);
-            steeringBarRight.setProgress(kart.getSteeringPosition() - 300, true);
+            steeringBarRight.setProgress(kart.getSteeringPosition() - STEERING_POS_MIDDLE, true);
         }
     }
 

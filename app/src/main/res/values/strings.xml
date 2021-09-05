@@ -6,7 +6,11 @@
     <string name="steering">Steering</string>
     <string name="throttle">Throttle</string>
     <string name="recenter_steering">Recenter Steering</string>
+    <string name="configure">Configure Kart</string>
     <string name="lights">Head Lights</string>
+
+    <string name="revert_steering">Revert Steering</string>
+    <string name="revert_throttle">Revert Throttle</string>
 
     <string name="accelerometer">Use Accelerometer</string>
     <string name="battery">Battery Voltage</string>
