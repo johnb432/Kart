@@ -1,5 +1,7 @@
 package ch.hevs.ss1;
 
+import java.lang.Math;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -10,14 +12,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.Switch;
@@ -27,14 +22,28 @@ import ch.hevs.kart.AbstractKartControlActivity;
 import ch.hevs.kart.Kart;
 import ch.hevs.kart.KartStatusRegister;
 import ch.hevs.kart.KartStatusRegisterListener;
+import ch.hevs.kart.utils.Timer;
 
 // For manifest values, see https://developer.android.com/guide/topics/manifest/activity-element.html#screen
+@SuppressWarnings("ConstantConditions")
 public class MyKartRemote extends AbstractKartControlActivity {
-    private final int STEERING_POS_MAX = 1000;
-    private final int STEERING_POS_MIDDLE = STEERING_POS_MAX / 2;
+    //private long oldTime = 0;
+    //private long newTime;
 
-    private long oldTime = 0;
-    private long newTime;
+    private int hallCounter = 0;
+    private final double RADIUS = 0.04; // 4cm
+    private final double CIRCUMFERENCE_WHEELS = 2 * Math.PI * RADIUS;
+    private final double COG_WHEEL_MULTIPLIER = 80.0 / 56;
+    private final double LENGTH_ONE_TURN = CIRCUMFERENCE_WHEELS * COG_WHEEL_MULTIPLIER;
+    private final int TIMER_INTERVAL = 2000;
+
+    private boolean useAccelSteering = false;
+    private boolean useAccelThrottle = false;
+    private boolean revertSteering = false;
+    private boolean revertThrottle = false;
+
+    private final String[] checkboxes = {"Use Accelerometer for Steering", "Use Accelerometer for Throttle", "Revert Steering", "Revert Throttle"};
+    private final boolean[] checkedItems = {useAccelSteering, useAccelThrottle, revertSteering, revertThrottle};
 
     private ProgressBar batteryLevelBar;
     private ProgressBar steeringBarLeft;
@@ -44,16 +53,6 @@ public class MyKartRemote extends AbstractKartControlActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_kart_remote);
-
-        @SuppressLint("UseSwitchCompatOrMaterialCode")
-        final Switch throttleToggle = findViewById(R.id.throttleToggle);
-        @SuppressLint("UseSwitchCompatOrMaterialCode")
-        final Switch steeringToggle = findViewById(R.id.steeringToggle);
-
-        @SuppressLint("UseSwitchCompatOrMaterialCode")
-        final Switch revertThrottle = findViewById(R.id.revertThrottle);
-        @SuppressLint("UseSwitchCompatOrMaterialCode")
-        final Switch revertSteering = findViewById(R.id.revertSteering);
 
         final TextView speedDisplay = findViewById(R.id.speedDisplay);
         final TextView throttleDisplay = findViewById(R.id.throttleDisplay);
@@ -65,12 +64,35 @@ public class MyKartRemote extends AbstractKartControlActivity {
         steeringBarLeft = findViewById(R.id.steeringBarLeft);
         steeringBarRight = findViewById(R.id.steeringBarRight);
 
-        kart.addStatusRegisterListener(new KartStatusRegisterListener() {
+        Timer timer = new Timer() {
             @SuppressLint("DefaultLocale")
+            @Override
+            public void onTimeout() {
+                double speed = LENGTH_ONE_TURN * hallCounter / TIMER_INTERVAL;
+
+                speedDisplay.setText(String.format("%.2f", speed));
+
+                if (kart.getDriveSpeed() >= 0) {
+                    speedBarPos.setProgress((int) speed, true);
+                    speedBarNeg.setProgress(0, true);
+                } else {
+                    speedBarPos.setProgress(0, true);
+                    speedBarNeg.setProgress((int) speed, true);
+                }
+
+                hallCounter = 0;
+            }
+        };
+        timer.schedulePeriodically(TIMER_INTERVAL);
+
+        kart.addStatusRegisterListener(new KartStatusRegisterListener() {
+            //@SuppressLint("DefaultLocale")
             @Override
             public void statusRegisterHasChanged(Kart kart, KartStatusRegister kartStatusRegister, int i) {
                 switch (kartStatusRegister.name()) {
                     case "HallSensorCounter1":
+                        hallCounter++;
+                        /*
                         newTime = System.nanoTime();
 
                         double speed = 800000000.0 / (newTime - oldTime); // should be in m/s; with 8cm circumference
@@ -87,6 +109,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
                             speedBarPos.setProgress(0, true);
                             speedBarNeg.setProgress((int) speed, true);
                         }
+                        */
 
                         break;
                     case "DistanceSensor":
@@ -114,9 +137,9 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onStartTrackingTouch(SeekBar seekBar) {}
 
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if (revertSteering.isChecked()) {
-                    //kart.setSteeringPosition(STEERING_POS_MIDDLE);
-                    seekBar.setProgress(STEERING_POS_MIDDLE, true);
+                if (revertSteering) {
+                    //kart.setSteeringPosition(kart.setup().steeringMaxPosition());
+                    seekBar.setProgress(kart.setup().steeringMaxPosition(), true);
                 }
             }
         });
@@ -133,7 +156,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onStartTrackingTouch(SeekBar seekBar) {}
 
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if (revertThrottle.isChecked()) {
+                if (revertThrottle) {
                     //kart.setDriveSpeed(0);
                     //throttleDisplay.setText(String.format("%d", 0));
                     seekBar.setProgress(0, true);
@@ -141,20 +164,18 @@ public class MyKartRemote extends AbstractKartControlActivity {
             }
         });
 
-        final Button resetSteering = findViewById(R.id.resetSteering);
-        resetSteering.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.resetSteering).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
                 kart.resetSteering();
-                //kart.setSteeringPosition(STEERING_POS_MIDDLE);
-                //steeringAngleSlider.setProgress(STEERING_POS_MIDDLE, true);
+                //kart.setSteeringPosition(kart.setup().steeringMaxPosition());
+                //steeringAngleSlider.setProgress(kart.setup().steeringMaxPosition(), true);
                 Log.d("resetSteering", "Reset steering");
             }
         });
 
         // Button to open kart configuration
-        final Button openSettings = findViewById(R.id.openSettings);
-        openSettings.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.openKartSettings).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
                 showKartSetupPopup();
@@ -162,11 +183,10 @@ public class MyKartRemote extends AbstractKartControlActivity {
         });
 
         // Button to open kart configuration
-        final Button openSettings2 = findViewById(R.id.openSettings);
-        openSettings.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.openConfigureSettings).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
-                showKartSetup2Popup(v);
+                showPhoneSetupPopup();
             }
         });
 
@@ -193,19 +213,19 @@ public class MyKartRemote extends AbstractKartControlActivity {
                 if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                     Log.d("Accelerometer", "Sensor Changed value:" + event.values[0] + ":" + event.values[1] + ":" + event.values[2]);
 
-                    if (throttleToggle.isChecked()) {
+                    if (useAccelThrottle) {
                         throttleLevelSlider.setProgress((int) (event.values[2] * 1.75), true);
                     }
 
-                    if (steeringToggle.isChecked()) {
-                        steeringAngleSlider.setProgress((int) (event.values[1]) * 30 + STEERING_POS_MIDDLE, true);
+                    if (useAccelSteering) {
+                        steeringAngleSlider.setProgress((int) (event.values[1]) * 30 + kart.setup().steeringMaxPosition(), true);
                     }
                 }
             }
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int i) {}
-        }, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+        }, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
     }
 
     protected void onResume() {
@@ -223,12 +243,12 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
     @Override
     public void steeringPositionChanged(Kart kart, int i, float v) {
-        if (i <= STEERING_POS_MIDDLE) {
-            steeringBarLeft.setProgress(STEERING_POS_MIDDLE - kart.getSteeringPosition(), true);
+        if (i <= kart.setup().steeringMaxPosition()) {
+            steeringBarLeft.setProgress(kart.setup().steeringMaxPosition() - kart.getSteeringPosition(), true);
             steeringBarRight.setProgress(0, true);
         } else {
             steeringBarLeft.setProgress(0, true);
-            steeringBarRight.setProgress(kart.getSteeringPosition() - STEERING_POS_MIDDLE, true);
+            steeringBarRight.setProgress(kart.getSteeringPosition() - kart.setup().steeringMaxPosition(), true);
         }
     }
 
@@ -254,28 +274,44 @@ public class MyKartRemote extends AbstractKartControlActivity {
     @Override
     public void message(Kart kart, String s) {}
 
-    protected void showKartConfigurePopup() {
+    // https://stackoverflow.com/questions/15762905/how-can-i-display-a-list-view-in-an-android-alert-dialog
+    protected void showPhoneSetupPopup() {
         // Setup the alert builder
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Configure Kart");
+        builder.setTitle("Configure Phone");
 
         // Add a checkbox list
-        String[] animals = {"horse", "cow", "camel", "sheep", "goat"};
-        boolean[] checkedItems = {true, false, false, true, false};
-        builder.setMultiChoiceItems(animals, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
+        builder.setMultiChoiceItems(checkboxes, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which, boolean isChecked) {
                 // User checked or unchecked a box
+                switch (which) {
+                    case 0:
+                        useAccelSteering = isChecked;
+                        break;
+                    case 1:
+                        useAccelThrottle = isChecked;
+                        break;
+                    case 2:
+                        revertSteering = isChecked;
+                        break;
+                    case 3:
+                        revertThrottle = isChecked;
+                        break;
+                    default:
+                }
             }
         });
 
         // Add OK and Cancel buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("OK", null/*new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // user clicked OK
-            }
-        });
+            public void onClick(DialogInterface dialog, int which) {}
+        }*/);
         builder.setNegativeButton("Cancel", null);
+
+        // Create and show the alert dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }

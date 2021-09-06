@@ -7,12 +7,28 @@
     android:background="@drawable/angle2"
     tools:context=".MyKartRemote">
 
+    <Button
+        android:id="@+id/openConfigureSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/configure_phone"
+        app:layout_constraintStart_toEndOf="@+id/openKartSettings"
+        app:layout_constraintTop_toTopOf="@+id/guideline2" />
+
+    <Button
+        android:id="@+id/openKartSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/configure_kart"
+        app:layout_constraintStart_toStartOf="@+id/guideline4"
+        app:layout_constraintTop_toTopOf="@+id/guideline2" />
+
     <TextView
         android:id="@+id/throttleDisplay"
         android:layout_width="37dp"
         android:layout_height="20dp"
         android:layout_marginTop="20dp"
-        android:layout_marginEnd="75dp"
+        android:layout_marginEnd="100dp"
         android:background="#73D8BD92"
         android:text="@string/zero"
         android:textAlignment="center"
@@ -34,19 +50,15 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/accelerometer"
-        android:layout_width="130dp"
-        android:layout_height="20dp"
-        android:layout_marginTop="10dp"
-        android:text="@string/accelerometer"
-        android:textAlignment="center"
-        android:textAllCaps="false"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:id="@+id/batteryVoltage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="45dp"
+        android:background="#73D8BD92"
+        android:text="@string/battery"
         android:textColor="#000000"
-        android:textIsSelectable="false"
-        android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/steeringToggle"
-        app:layout_constraintTop_toTopOf="@+id/guideline2" />
+        app:layout_constraintEnd_toStartOf="@+id/guideline5"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ProgressBar
         android:id="@+id/speedBarPos"
@@ -55,26 +67,12 @@
         android:layout_height="40dp"
         android:layout_marginTop="75dp"
         android:layout_marginEnd="135dp"
+        android:background="#73D8BD92"
         android:max="5"
         android:min="0"
         android:progress="0"
         android:progressTint="#000000"
         android:rotation="-90"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ProgressBar
-        android:id="@+id/speedBarNeg"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="130dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="210dp"
-        android:layout_marginEnd="140dp"
-        android:max="5"
-        android:min="0"
-        android:progress="0"
-        android:progressTint="#000000"
-        android:rotation="90"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -99,6 +97,7 @@
         android:layout_height="20dp"
         android:layout_marginStart="15dp"
         android:layout_marginTop="170dp"
+        android:background="#73D8BD92"
         android:max="300"
         android:min="0"
         android:progress="0"
@@ -113,11 +112,28 @@
         android:layout_width="160dp"
         android:layout_height="20dp"
         android:layout_marginTop="170dp"
+        android:background="#73D8BD92"
         android:max="300"
         android:min="0"
         android:progressTint="#000000"
         app:layout_constraintStart_toEndOf="@+id/steeringBarLeft"
         app:layout_constraintTop_toTopOf="@+id/guideline2" />
+
+    <ProgressBar
+        android:id="@+id/speedBarNeg"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="130dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="210dp"
+        android:layout_marginEnd="140dp"
+        android:background="#73D8BD92"
+        android:max="5"
+        android:min="0"
+        android:progress="0"
+        android:progressTint="#000000"
+        android:rotation="90"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <SeekBar
         android:id="@+id/throttleLevelSlider"
@@ -149,39 +165,16 @@
         app:layout_constraintTop_toBottomOf="@+id/steeringBarLeft" />
 
     <Switch
-        android:id="@+id/throttleToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:background="#73D8BD92"
-        android:minHeight="48dp"
-        android:text="@string/throttle"
-        app:layout_constraintStart_toEndOf="@+id/accelerometer"
-        app:layout_constraintTop_toTopOf="@+id/guideline2"
-        tools:ignore="UseSwitchCompatOrMaterialXml" />
-
-    <Switch
-        android:id="@+id/steeringToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_marginStart="10dp"
-        android:background="#73D8BD92"
-        android:minHeight="48dp"
-        android:text="@string/steering"
-        app:layout_constraintStart_toEndOf="@+id/openSettings"
-        app:layout_constraintTop_toTopOf="@+id/guideline2"
-        tools:ignore="UseSwitchCompatOrMaterialXml" />
-
-    <Switch
         android:id="@+id/lightSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="20dp"
         android:background="#73D8BD92"
         android:minHeight="48dp"
         android:text="@string/lights"
         app:layout_constraintStart_toEndOf="@+id/resetSteering"
-        app:layout_constraintTop_toBottomOf="@+id/steeringToggle"
+        app:layout_constraintTop_toBottomOf="@+id/openConfigureSettings"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <Button
@@ -191,18 +184,7 @@
         android:layout_marginTop="20dp"
         android:text="@string/recenter_steering"
         app:layout_constraintStart_toStartOf="@+id/guideline4"
-        app:layout_constraintTop_toBottomOf="@+id/steeringToggle" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="45dp"
-        android:background="#73D8BD92"
-        android:text="@string/battery"
-        android:textColor="#000000"
-        app:layout_constraintEnd_toStartOf="@+id/guideline5"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/openKartSettings" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline2"
@@ -233,37 +215,5 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_begin="715dp" />
-
-    <Button
-        android:id="@+id/openSettings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/configure"
-        app:layout_constraintStart_toStartOf="@+id/guideline4"
-        app:layout_constraintTop_toTopOf="@+id/guideline2" />
-
-    <Switch
-        android:id="@+id/revertSteering"
-        android:layout_width="160dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="116dp"
-        android:layout_marginBottom="3dp"
-        android:background="#73D8BD92"
-        android:text="@string/revert_steering"
-        app:layout_constraintBottom_toTopOf="@+id/steeringBarRight"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:ignore="UseSwitchCompatOrMaterialXml" />
-
-    <Switch
-        android:id="@+id/revertThrottle"
-        android:layout_width="100dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="130dp"
-        android:layout_marginEnd="230dp"
-        android:background="#73D8BD92"
-        android:text="@string/revert_throttle"
-        app:layout_constraintEnd_toStartOf="@+id/guideline5"
-        app:layout_constraintTop_toTopOf="@+id/guideline2"
-        tools:ignore="UseSwitchCompatOrMaterialXml" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
