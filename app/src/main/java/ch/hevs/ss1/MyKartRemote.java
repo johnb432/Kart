@@ -3,6 +3,7 @@ package ch.hevs.ss1;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -253,68 +254,28 @@ public class MyKartRemote extends AbstractKartControlActivity {
     @Override
     public void message(Kart kart, String s) {}
 
-    protected void showKartSetup2Popup(View view) {
-        /*
+    protected void showKartConfigurePopup() {
+        // Setup the alert builder
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View setupView = this.getLayoutInflater().inflate(R.layout.activity_my_kart_remote, (ViewGroup)null);
-        builder.setView(setupView);
+        builder.setTitle("Configure Kart");
 
-
-        builder.create().show();
-         */
-        /*
-        popUp = new PopupWindow(this);
-        LinearLayout layout = new LinearLayout(this);
-        LinearLayout mainLayout = new LinearLayout(this);
-        TextView tv = new TextView(this);
-        Button but = new Button(this);
-        but.setText("Click Me");
-        but.setOnClickListener(new OnClickListener() {
+        // Add a checkbox list
+        String[] animals = {"horse", "cow", "camel", "sheep", "goat"};
+        boolean[] checkedItems = {true, false, false, true, false};
+        builder.setMultiChoiceItems(animals, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
             @Override
-            public void onClick(View v) {
-                if (click) {
-                    popUp.showAtLocation(layout, Gravity.BOTTOM, 10, 10);
-                    popUp.update(50, 50, 300, 80);
-                    click = false;
-                } else {
-                    popUp.dismiss();
-                    click = true;
-                }
+            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                // User checked or unchecked a box
             }
         });
 
-        LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        tv.setText("Hi this is a sample text for popup window");
-        layout.addView(tv, params);
-        popUp.setContentView(layout);
-        // popUp.showAtLocation(layout, Gravity.BOTTOM, 10, 10);
-        mainLayout.addView(but, params);
-        setContentView(mainLayout);
-        */
-
-        // inflate the layout of the popup window
-        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        View popupView = inflater.inflate(R.layout.my_kart_configure, null);
-
-        // create the popup window
-        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
-        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-        boolean focusable = true; // lets taps outside the popup also dismiss it
-        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, focusable);
-
-        // show the popup window
-        // which view you pass in doesn't matter, it is only used for the window tolken
-        popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0);
-
-        // dismiss the popup window when touched
-        popupView.setOnTouchListener(new View.OnTouchListener() {
+        // Add OK and Cancel buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                popupWindow.dismiss();
-                return true;
+            public void onClick(DialogInterface dialog, int which) {
+                // user clicked OK
             }
         });
+        builder.setNegativeButton("Cancel", null);
     }
 }
