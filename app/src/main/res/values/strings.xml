@@ -13,4 +13,8 @@
     <string name="configure_phone">Configure Phone</string>
 
     <string name="battery">Battery Voltage</string>
+
+    <string name="background">Background</string>
+
+    <string name="distance">Distance to object</string>
 </resources>

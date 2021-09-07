@@ -10,12 +10,61 @@
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/background"
         android:src="@drawable/angle2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:background="#73D8BD92"
+        android:text="@string/distance"
+        android:textColor="#000000"
+        app:layout_constraintEnd_toStartOf="@+id/guideline5"
+        app:layout_constraintTop_toBottomOf="@+id/batteryLevelBar" />
+
+    <TextView
+        android:id="@+id/distanceDisplay"
+        android:layout_width="37dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="40dp"
+        android:background="#73D8BD92"
+        android:text="@string/zero"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        app:layout_constraintEnd_toStartOf="@+id/guideline5"
+        app:layout_constraintTop_toBottomOf="@+id/distance" />
+
+    <TextView
+        android:id="@+id/steeringDisplay"
+        android:layout_width="37dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="220dp"
+        android:background="#73D8BD92"
+        android:text="@string/zero"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        app:layout_constraintStart_toEndOf="@+id/steeringAngleSlider"
+        app:layout_constraintTop_toTopOf="@+id/guideline2" />
+
+    <TextView
+        android:id="@+id/angleDisplay"
+        android:layout_width="37dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="170dp"
+        android:background="#73D8BD92"
+        android:text="@string/zero"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        app:layout_constraintStart_toEndOf="@+id/steeringBarRight"
+        app:layout_constraintTop_toTopOf="@+id/guideline2" />
+
     <Button
-        android:id="@+id/openConfigureSettings"
+        android:id="@+id/openPhoneSettings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/configure_phone"
@@ -147,11 +196,13 @@
         style="@android:style/Widget.SeekBar"
         android:layout_width="300dp"
         android:layout_height="70dp"
-        android:layout_marginTop="125dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginTop="124dp"
+        android:layout_marginEnd="16dp"
         android:max="15"
         android:min="-15"
+        android:orientation="horizontal"
         android:progress="0"
+        android:progressBackgroundTint="#FFD8BD92"
         android:progressTint="#00FFFFFF"
         android:rotation="-90"
         android:thumb="@drawable/gas_pedal"
@@ -164,11 +215,13 @@
         android:layout_width="350dp"
         android:layout_height="70dp"
         android:layout_marginTop="5dp"
-        android:max="600"
-        android:progress="300"
+        android:max="1000"
+        android:min="0"
+        android:progress="500"
+        android:progressBackgroundTint="#FFD8BD92"
         android:progressTint="#00FFFFFF"
         android:rotation="180"
-        android:thumb="@drawable/steering_wheel"
+        android:thumb="@drawable/steering_wheel_flipped"
         app:layout_constraintStart_toStartOf="@+id/guideline4"
         app:layout_constraintTop_toBottomOf="@+id/steeringBarLeft" />
 
@@ -181,12 +234,12 @@
         android:background="#73D8BD92"
         android:minHeight="48dp"
         android:text="@string/lights"
-        app:layout_constraintStart_toEndOf="@+id/resetSteering"
-        app:layout_constraintTop_toBottomOf="@+id/openConfigureSettings"
+        app:layout_constraintStart_toEndOf="@+id/recenterSteering"
+        app:layout_constraintTop_toBottomOf="@+id/openPhoneSettings"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <Button
-        android:id="@+id/resetSteering"
+        android:id="@+id/recenterSteering"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
