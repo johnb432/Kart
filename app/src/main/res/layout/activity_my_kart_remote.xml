@@ -4,8 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/angle2"
     tools:context=".MyKartRemote">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/angle2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/openConfigureSettings"
@@ -160,6 +167,7 @@
         android:max="600"
         android:progress="300"
         android:progressTint="#00FFFFFF"
+        android:rotation="180"
         android:thumb="@drawable/steering_wheel"
         app:layout_constraintStart_toStartOf="@+id/guideline4"
         app:layout_constraintTop_toBottomOf="@+id/steeringBarLeft" />

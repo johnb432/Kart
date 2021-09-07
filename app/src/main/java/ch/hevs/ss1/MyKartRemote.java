@@ -37,17 +37,15 @@ public class MyKartRemote extends AbstractKartControlActivity {
     private final double LENGTH_ONE_TURN = CIRCUMFERENCE_WHEELS * COG_WHEEL_MULTIPLIER;
     private final int TIMER_INTERVAL = 2000;
 
-    private boolean useAccelSteering = false;
-    private boolean useAccelThrottle = false;
-    private boolean revertSteering = false;
-    private boolean revertThrottle = false;
-
     private final String[] checkboxes = {"Use Accelerometer for Steering", "Use Accelerometer for Throttle", "Revert Steering", "Revert Throttle"};
-    private final boolean[] checkedItems = {useAccelSteering, useAccelThrottle, revertSteering, revertThrottle};
+    private boolean[] checkedItems = {false, false, false, false};
 
     private ProgressBar batteryLevelBar;
     private ProgressBar steeringBarLeft;
     private ProgressBar steeringBarRight;
+
+    private SeekBar throttleLevelSlider;
+    private SeekBar steeringAngleSlider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +68,8 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onTimeout() {
                 double speed = LENGTH_ONE_TURN * hallCounter / TIMER_INTERVAL;
 
-                speedDisplay.setText(String.format("%.2f", speed));
+                //speedDisplay.setText(String.format("%.2f", speed));
+                speedDisplay.setText(String.format("%d", hallCounter));
 
                 if (kart.getDriveSpeed() >= 0) {
                     speedBarPos.setProgress((int) speed, true);
@@ -127,7 +126,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
             }
         });
 
-        final SeekBar steeringAngleSlider = findViewById(R.id.steeringAngleSlider);
+        steeringAngleSlider = findViewById(R.id.steeringAngleSlider);
         steeringAngleSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             // Code here executes on main thread after user moves slider
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -137,14 +136,14 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onStartTrackingTouch(SeekBar seekBar) {}
 
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if (revertSteering) {
+                if (checkedItems[2]) {
                     //kart.setSteeringPosition(kart.setup().steeringMaxPosition());
-                    seekBar.setProgress(kart.setup().steeringMaxPosition(), true);
+                    seekBar.setProgress(kart.setup().steeringMaxPosition() / 2, true);
                 }
             }
         });
 
-        final SeekBar throttleLevelSlider = findViewById(R.id.throttleLevelSlider);
+        throttleLevelSlider = findViewById(R.id.throttleLevelSlider);
         throttleLevelSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             // Code here executes on main thread after user moves slider
             @SuppressLint("DefaultLocale")
@@ -156,7 +155,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onStartTrackingTouch(SeekBar seekBar) {}
 
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if (revertThrottle) {
+                if (checkedItems[3]) {
                     //kart.setDriveSpeed(0);
                     //throttleDisplay.setText(String.format("%d", 0));
                     seekBar.setProgress(0, true);
@@ -167,10 +166,8 @@ public class MyKartRemote extends AbstractKartControlActivity {
         findViewById(R.id.resetSteering).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
-                kart.resetSteering();
-                //kart.setSteeringPosition(kart.setup().steeringMaxPosition());
-                //steeringAngleSlider.setProgress(kart.setup().steeringMaxPosition(), true);
-                Log.d("resetSteering", "Reset steering");
+                steeringAngleSlider.setProgress(kart.setup().steeringMaxPosition() / 2, true);
+                //kart.setSteeringPosition(kart.setup().steeringMaxPosition() / 2);
             }
         });
 
@@ -178,6 +175,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
         findViewById(R.id.openKartSettings).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
+                steeringAngleSlider.setProgress(kart.setup().steeringMaxPosition() / 2, true);
                 showKartSetupPopup();
             }
         });
@@ -197,7 +195,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
 
-                for (int i = 0; i < 4; i++) {
+                for (int i = 0; i < 1; i++) {
                     kart.toggleLed(i);
                 }
 
@@ -211,14 +209,12 @@ public class MyKartRemote extends AbstractKartControlActivity {
             @Override
             public final void onSensorChanged(SensorEvent event) {
                 if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                    Log.d("Accelerometer", "Sensor Changed value:" + event.values[0] + ":" + event.values[1] + ":" + event.values[2]);
-
-                    if (useAccelThrottle) {
+                    if (checkedItems[1]) {
                         throttleLevelSlider.setProgress((int) (event.values[2] * 1.75), true);
                     }
 
-                    if (useAccelSteering) {
-                        steeringAngleSlider.setProgress((int) (event.values[1]) * 30 + kart.setup().steeringMaxPosition(), true);
+                    if (checkedItems[0]) {
+                        steeringAngleSlider.setProgress((int) (event.values[1]) * 30 + kart.setup().steeringMaxPosition() / 2, true);
                     }
                 }
             }
@@ -237,18 +233,21 @@ public class MyKartRemote extends AbstractKartControlActivity {
     protected void onPause() {
         super.onPause();
 
-        //throttleLevelSlider.setProgress(0);
-        //steeringAngleSlider.setProgress(0);
+        throttleLevelSlider.setProgress(0);
+        steeringAngleSlider.setProgress(kart.setup().steeringMaxPosition() / 2);
     }
 
     @Override
     public void steeringPositionChanged(Kart kart, int i, float v) {
-        if (i <= kart.setup().steeringMaxPosition()) {
-            steeringBarLeft.setProgress(kart.setup().steeringMaxPosition() - kart.getSteeringPosition(), true);
+        steeringBarLeft.setMax(kart.setup().steeringMaxPosition() / 2);
+        steeringBarRight.setMax(kart.setup().steeringMaxPosition() / 2);
+
+        if (i <= kart.setup().steeringMaxPosition() / 2) {
+            steeringBarLeft.setProgress(kart.setup().steeringMaxPosition() / 2 - kart.getSteeringPosition(), true);
             steeringBarRight.setProgress(0, true);
         } else {
             steeringBarLeft.setProgress(0, true);
-            steeringBarRight.setProgress(kart.getSteeringPosition() - kart.setup().steeringMaxPosition(), true);
+            steeringBarRight.setProgress(kart.getSteeringPosition() - kart.setup().steeringMaxPosition() / 2, true);
         }
     }
 
@@ -266,8 +265,9 @@ public class MyKartRemote extends AbstractKartControlActivity {
     @Override
     public void connectionStatusChanged(Kart kart, boolean b) {
         if (b) {
-            //kart.setup();
             kart.resetSteering();
+        } else {
+            kart.setDriveSpeed(0);
         }
     }
 
@@ -280,34 +280,24 @@ public class MyKartRemote extends AbstractKartControlActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Configure Phone");
 
+        final boolean[] checkItemsTemp = checkedItems.clone();
+
         // Add a checkbox list
-        builder.setMultiChoiceItems(checkboxes, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
+        builder.setMultiChoiceItems(checkboxes, checkItemsTemp, new DialogInterface.OnMultiChoiceClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which, boolean isChecked) {
                 // User checked or unchecked a box
-                switch (which) {
-                    case 0:
-                        useAccelSteering = isChecked;
-                        break;
-                    case 1:
-                        useAccelThrottle = isChecked;
-                        break;
-                    case 2:
-                        revertSteering = isChecked;
-                        break;
-                    case 3:
-                        revertThrottle = isChecked;
-                        break;
-                    default:
-                }
+                checkItemsTemp[which] = isChecked;
             }
         });
 
         // Add OK and Cancel buttons
-        builder.setPositiveButton("OK", null/*new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {}
-        }*/);
+            public void onClick(DialogInterface dialog, int which) {
+                checkedItems = checkItemsTemp.clone();
+            }
+        });
         builder.setNegativeButton("Cancel", null);
 
         // Create and show the alert dialog
