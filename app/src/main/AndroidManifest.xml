@@ -6,6 +6,7 @@
         android:allowBackup="false"
         android:label="@string/app_name"
         android:supportsRtl="true"
+        android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".MyKartRemote"
             android:screenOrientation="sensorLandscape">
