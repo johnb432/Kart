@@ -15,6 +15,31 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Switch
+        android:id="@+id/blinkerRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:background="#73D8BD92"
+        android:minHeight="48dp"
+        android:text="@string/blinkerRight"
+        app:layout_constraintStart_toEndOf="@+id/blinkerLeft"
+        app:layout_constraintTop_toBottomOf="@+id/lightSwitch"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+    <Switch
+        android:id="@+id/blinkerLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="3dp"
+        android:background="#73D8BD92"
+        android:minHeight="48dp"
+        android:text="@string/blinkerLeft"
+        app:layout_constraintStart_toStartOf="@+id/guideline4"
+        app:layout_constraintTop_toBottomOf="@+id/recenterSteering"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
+
     <TextView
         android:id="@+id/distance"
         android:layout_width="wrap_content"
@@ -84,20 +109,20 @@
         android:layout_width="37dp"
         android:layout_height="20dp"
         android:layout_marginTop="20dp"
-        android:layout_marginEnd="100dp"
+        android:layout_marginEnd="110dp"
         android:background="#73D8BD92"
         android:text="@string/zero"
         android:textAlignment="center"
         android:textColor="#000000"
-        app:layout_constraintEnd_toStartOf="@+id/guideline5"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/speedDisplay"
-        android:layout_width="37dp"
+        android:layout_width="80dp"
         android:layout_height="20dp"
         android:layout_marginTop="20dp"
-        android:layout_marginEnd="210dp"
+        android:layout_marginEnd="230dp"
         android:background="#73D8BD92"
         android:text="@string/zero"
         android:textAlignment="center"
@@ -124,7 +149,7 @@
         android:layout_marginTop="75dp"
         android:layout_marginEnd="135dp"
         android:background="#73D8BD92"
-        android:max="5"
+        android:max="100"
         android:min="0"
         android:progress="0"
         android:progressTint="#000000"
@@ -139,10 +164,13 @@
         android:layout_height="20dp"
         android:layout_marginTop="65dp"
         android:background="#73D8BD92"
+        android:foregroundTint="#FF4800"
         android:indeterminate="false"
+        android:indeterminateTint="#4CAF50"
         android:max="100"
         android:progress="0"
         android:progressTint="#4CAF50"
+        android:secondaryProgressTint="#FF0000"
         app:layout_constraintEnd_toStartOf="@+id/guideline5"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -183,7 +211,7 @@
         android:layout_marginTop="210dp"
         android:layout_marginEnd="140dp"
         android:background="#73D8BD92"
-        android:max="5"
+        android:max="100"
         android:min="0"
         android:progress="0"
         android:progressTint="#000000"

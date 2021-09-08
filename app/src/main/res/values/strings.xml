@@ -8,6 +8,8 @@
 
     <string name="recenter_steering">Recenter Steering</string>
     <string name="lights">Head Lights</string>
+    <string name="blinkerRight">Turn signal right</string>
+    <string name="blinkerLeft">Turn signal left</string>
 
     <string name="configure_kart">Configure Kart</string>
     <string name="configure_phone">Configure Phone</string>

@@ -2,6 +2,7 @@ package ch.hevs.ss1;
 
 import java.lang.Math;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,6 +14,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,14 +28,12 @@ import ch.hevs.kart.utils.Timer;
 // For manifest values, see https://developer.android.com/guide/topics/manifest/activity-element.html#screen
 public class MyKartRemote extends AbstractKartControlActivity {
     private int hallCounter = 0;
-    private final double RADIUS = 0.04; // 4cm
-    private final double CIRCUMFERENCE_WHEELS = 2 * Math.PI * RADIUS;
-    private final double COG_WHEEL_MULTIPLIER = 80.0 / 56;
-    private final double LENGTH_ONE_TURN = CIRCUMFERENCE_WHEELS * COG_WHEEL_MULTIPLIER;
-    private final int TIMER_INTERVAL = 2000;
+    private final double CIRCUMFERENCE_WHEELS = 8 * Math.PI; // cm
+    private final double LENGTH_ONE_TURN = CIRCUMFERENCE_WHEELS * (80.0 / 56); // cog wheel multiplication
+    private final int TIMER_INTERVAL = 2; // seconds
 
-    private final String[] checkboxes = {"Use Accelerometer for Steering", "Use Accelerometer for Throttle", "Revert Steering", "Revert Throttle"};
-    private boolean[] settings = {false, false, false, false};
+    private final String[] checkboxes = {"Use Accelerometer for Steering", "Use Accelerometer for Throttle", "Revert Steering", "Revert Throttle", "Turn on Danger Signal"};
+    private boolean[] settings = {false, false, false, false, false};
 
     private boolean settingsOpened = false;
 
@@ -43,6 +43,11 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
     private SeekBar throttleLevelSlider;
     private SeekBar steeringAngleSlider;
+
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
+    private Switch blinkerRight;
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
+    private Switch blinkerLeft;
 
     private TextView angleDisplay;
     private TextView distanceDisplay;
@@ -67,11 +72,11 @@ public class MyKartRemote extends AbstractKartControlActivity {
         distanceDisplay = findViewById(R.id.distanceDisplay);
 
         Timer timer = new Timer() {
+            @SuppressLint({"DefaultLocale", "SetTextI18n"})
             @Override
             public void onTimeout() {
-                double speed = LENGTH_ONE_TURN * hallCounter / 2 / TIMER_INTERVAL;
-
-                speedDisplay.setText(String.format("%.2s", speed));
+                double speed = LENGTH_ONE_TURN * ((double) hallCounter / 2) / TIMER_INTERVAL;
+                speedDisplay.setText(String.format("%.2f", speed) + " cm/s");
 
                 if (kart.getDriveSpeed() >= 0) {
                     speedBarPos.setProgress((int) speed, true);
@@ -84,10 +89,10 @@ public class MyKartRemote extends AbstractKartControlActivity {
                 hallCounter = 0;
             }
         };
-        timer.schedulePeriodically(TIMER_INTERVAL);
+        timer.schedulePeriodically(TIMER_INTERVAL * 1000);
 
         kart.addStatusRegisterListener(new KartStatusRegisterListener() {
-            //@SuppressLint("DefaultLocale")
+            @SuppressLint("DefaultLocale")
             @Override
             public void statusRegisterHasChanged(Kart kart, KartStatusRegister kartStatusRegister, int i) {
                 switch (kartStatusRegister.name()) {
@@ -96,7 +101,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
                         break;
                     case "DistanceSensor":
                         // Distance in cm; see http://wiki.hevs.ch/fsi/index.php5/Kart/sensors/HCSR04
-                        distanceDisplay.setText(String.format("%.2s", 0.0017 * i));
+                        distanceDisplay.setText(String.format("%.2f cm", 0.0017 * i));
                         break;
                     default: {}
                 }
@@ -177,9 +182,29 @@ public class MyKartRemote extends AbstractKartControlActivity {
         findViewById(R.id.lightSwitch).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Turn on all LEDs that are hooked up
-                for (int i = 0; i < 4; i++) {
+                for (int i = 0; i < 2; i++) {
                     kart.toggleLed(i);
                 }
+            }
+        });
+
+        blinkerRight = findViewById(R.id.blinkerRight);
+        blinkerRight.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                blinkerLeft.setChecked(false);
+                settings[4] = false;
+
+                turnOnBlinker(1);
+            }
+        });
+
+        blinkerLeft = findViewById(R.id.blinkerLeft);
+        blinkerLeft.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                blinkerRight.setChecked(false);
+                settings[4] = false;
+
+                turnOnBlinker(0);
             }
         });
 
@@ -191,12 +216,11 @@ public class MyKartRemote extends AbstractKartControlActivity {
                 if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                     // Use sensor data for steering if options are enabled
                     if (settings[0]) {
-                        // 30 * 300
-                        steeringAngleSlider.setProgress((int) (event.values[1]) * 30 + getPositionCenter(kart), true);
+                        steeringAngleSlider.setProgress((int) (event.values[1]) * ((isSteeringInverted(kart)) ? 30 : -30) + getPositionCenter(kart), true);
                     }
 
                     if (settings[1]) {
-                        throttleLevelSlider.setProgress((int) (event.values[2] * 1.75), true);
+                        throttleLevelSlider.setProgress((int) (event.values[2] * 1.6), true);
                     }
                 }
             }
@@ -224,9 +248,8 @@ public class MyKartRemote extends AbstractKartControlActivity {
         angleDisplay.setText(String.format("%s", i));
 
         int positionCenter = getPositionCenter(kart);
-
-        if (i <= positionCenter) {
-            if (!kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition)) {
+        if (isSteeringInverted(kart) == kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition)) {
+            if (i <= positionCenter) {
                 steeringBarLeft.setProgress(positionCenter - kart.getSteeringPosition(), true);
                 steeringBarRight.setProgress(0, true);
             } else {
@@ -234,14 +257,13 @@ public class MyKartRemote extends AbstractKartControlActivity {
                 steeringBarRight.setProgress(kart.getSteeringPosition() - positionCenter, true);
             }
         } else {
-            if (!kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition)) {
-                steeringBarLeft.setProgress(0, true);
-                steeringBarRight.setProgress(kart.getSteeringPosition() - positionCenter, true);
-            } else {
+            if (i >= positionCenter) {
                 steeringBarLeft.setProgress(positionCenter - kart.getSteeringPosition(), true);
                 steeringBarRight.setProgress(0, true);
+            } else {
+                steeringBarLeft.setProgress(0, true);
+                steeringBarRight.setProgress(kart.getSteeringPosition() - positionCenter, true);
             }
-
         }
     }
 
@@ -250,9 +272,18 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
     @Override
     public void batteryVoltageChanged(Kart kart, float v) {
-        batteryLevelBar.setProgress((int) (100 * v), true);
-        //batteryLevelBar.setProgressTintList(batteryLevelBar.getForegroundTintList();
-        //...batteryLevelBar.getSecondaryProgressTintList();
+        int batteryLevel = (int) (100 * v);
+        batteryLevelBar.setProgress(batteryLevel, true);
+
+        if (batteryLevel <= 50) {
+            batteryLevelBar.setProgressTintList(batteryLevelBar.getForegroundTintList());
+
+            if (batteryLevel <= 25) {
+                batteryLevelBar.setProgressTintList(batteryLevelBar.getSecondaryProgressTintList());
+            }
+        } else {
+            batteryLevelBar.setProgressTintList(batteryLevelBar.getIndeterminateTintList());
+        }
     }
 
     @Override
@@ -296,6 +327,21 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onClick(DialogInterface dialog, int which) {
                 // Apply settings only after 'OK' has been pressed
                 settings = checkItems.clone();
+
+                if (!settings[0] || settings[2]) {
+                    steeringAngleSlider.setProgress(getPositionCenter(kart));
+                }
+
+                if (!settings[1] || settings[3]) {
+                    throttleLevelSlider.setProgress(0);
+                }
+
+                if (settings[4]) {
+                    blinkerLeft.setChecked(false);
+                    blinkerRight.setChecked(false);
+
+                    turnOnBlinker(2);
+                }
             }
         });
         builder.setNegativeButton("Cancel", null);
@@ -307,6 +353,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
+        // Detect when the "Configure Kart" popup has been closed
         if (hasFocus && settingsOpened) {
             settingsOpened = false;
 
@@ -324,33 +371,73 @@ public class MyKartRemote extends AbstractKartControlActivity {
     }
 
     protected void setSteeringPosition (Kart kart, int i) {
-        if (!kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition)) {
-            kart.setSteeringPosition(i);
-        } else {
+        if (!isSteeringInverted(kart)) {
             kart.setSteeringPosition(kart.setup().steeringMaxPosition() - i);
+        } else {
+            kart.setSteeringPosition(i);
         }
     }
-    /*
-    protected void turnOnBlinker(final int i) {
-        int leds = 0;
 
-        switch (i) {
+    protected boolean isSteeringInverted (Kart kart) {
+        return kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition);
+    }
+
+    protected void turnOnBlinker(int mode) {
+        final int TIMER_BLINKER = 500;
+
+        switch (mode) {
             case 0:
-                leds = 1;
-                break;
+                kart.setLed(2, true);
+
+                Timer LEDLeft = new Timer() {
+                    @Override
+                    public void onTimeout() {
+                        kart.toggleLed(2);
+
+                        if (!blinkerLeft.isChecked()) {
+                            kart.setLed(2, false);
+                            this.stop();
+                        }
+                    }
+                };
+
+                LEDLeft.schedulePeriodically(TIMER_BLINKER);
             case 1:
+                kart.setLed(3, true);
+
+                Timer LEDRight = new Timer() {
+                    @Override
+                    public void onTimeout() {
+                        kart.toggleLed(3);
+
+                        if (!blinkerRight.isChecked()) {
+                            kart.setLed(3, false);
+                            this.stop();
+                        }
+                    }
+                };
+
+                LEDRight.schedulePeriodically(TIMER_BLINKER);
+                break;
+            case 2:
+                kart.setLed(2, true);
+                kart.setLed(3, true);
+
+                Timer LEDBoth = new Timer() {
+                    @Override
+                    public void onTimeout() {
+                        kart.toggleLed(2);
+                        kart.toggleLed(3);
+
+                        if (!settings[4]) {
+                            kart.setLed(2, false);
+                            kart.setLed(3, false);
+                            this.stop();
+                        }
+                    }
+                };
+
+                LEDBoth.schedulePeriodically(TIMER_BLINKER);
         }
-
-        Timer timer = new Timer() {
-            @Override
-            public void onTimeout() {
-                kart.toggleLed(mode);
-
-                if (stop) {
-                    kart.setLed(i, false);
-                }
-            }
-        };
     }
-    */
 }
