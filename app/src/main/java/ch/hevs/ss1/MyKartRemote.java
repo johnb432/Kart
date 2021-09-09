@@ -33,7 +33,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
     private final int TIMER_INTERVAL = 2; // seconds
 
     private final String[] checkboxes = {"Use Accelerometer for Steering", "Use Accelerometer for Throttle", "Revert Steering", "Revert Throttle", "Turn on Danger Signal"};
-    private boolean[] settings = {false, false, false, false, false};
+    private boolean[] settings = {false, false, true, true, false};
 
     private boolean settingsOpened = false;
 
@@ -71,10 +71,12 @@ public class MyKartRemote extends AbstractKartControlActivity {
         angleDisplay = findViewById(R.id.angleDisplay);
         distanceDisplay = findViewById(R.id.distanceDisplay);
 
-        Timer timer = new Timer() {
+        Timer displaySpeed = new Timer() {
             @SuppressLint({"DefaultLocale", "SetTextI18n"})
             @Override
             public void onTimeout() {
+                // Take the length for one turn, multiply it by half of the hall sensor count (because there are 2 magnets) and divide it by the time in seconds.
+                // This gives us distance over time, which is velocity.
                 double speed = LENGTH_ONE_TURN * ((double) hallCounter / 2) / TIMER_INTERVAL;
                 speedDisplay.setText(String.format("%.2f", speed) + " cm/s");
 
@@ -89,21 +91,25 @@ public class MyKartRemote extends AbstractKartControlActivity {
                 hallCounter = 0;
             }
         };
-        timer.schedulePeriodically(TIMER_INTERVAL * 1000);
+        displaySpeed.schedulePeriodically(TIMER_INTERVAL * 1000);
 
+        // Add a listener to see when registers change.
+        // "Feature": If kart does nothing aside from updating either the hall sensor or the distance sensor (others haven't been verified),
+        // the listener does not trigger correctly.
         kart.addStatusRegisterListener(new KartStatusRegisterListener() {
             @SuppressLint("DefaultLocale")
             @Override
             public void statusRegisterHasChanged(Kart kart, KartStatusRegister kartStatusRegister, int i) {
                 switch (kartStatusRegister.name()) {
                     case "HallSensorCounter1":
+                        // Count each detection of the magnet
                         hallCounter++;
                         break;
                     case "DistanceSensor":
                         // Distance in cm; see http://wiki.hevs.ch/fsi/index.php5/Kart/sensors/HCSR04
                         distanceDisplay.setText(String.format("%.2f cm", 0.0017 * i));
                         break;
-                    default: {}
+                    default:
                 }
             }
         });
@@ -178,19 +184,20 @@ public class MyKartRemote extends AbstractKartControlActivity {
             }
         });
 
-        // Switch to turn off all lights
+        // Switch to turn off front and rear lights
         findViewById(R.id.lightSwitch).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                // Turn on all LEDs that are hooked up
                 for (int i = 0; i < 2; i++) {
                     kart.toggleLed(i);
                 }
             }
         });
 
+        // Turn on the right turn signal
         blinkerRight = findViewById(R.id.blinkerRight);
         blinkerRight.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                // Turn off all previous timers and turn signals
                 blinkerLeft.setChecked(false);
                 settings[4] = false;
 
@@ -198,9 +205,11 @@ public class MyKartRemote extends AbstractKartControlActivity {
             }
         });
 
+        // Turn on the left turn signal
         blinkerLeft = findViewById(R.id.blinkerLeft);
         blinkerLeft.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                // Turn off all previous timers and turn signals
                 blinkerRight.setChecked(false);
                 settings[4] = false;
 
@@ -214,11 +223,12 @@ public class MyKartRemote extends AbstractKartControlActivity {
             @Override
             public final void onSensorChanged(SensorEvent event) {
                 if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                    // Use sensor data for steering if options are enabled
+                    // Use sensor data for steering if option is enabled
                     if (settings[0]) {
-                        steeringAngleSlider.setProgress((int) (event.values[1]) * ((isSteeringInverted(kart)) ? 30 : -30) + getPositionCenter(kart), true);
+                        steeringAngleSlider.setProgress((int) (event.values[1]) * ((isSteeringEndContactLeft(kart)) ? 30 : -30) + getPositionCenter(kart), true);
                     }
 
+                    // Use sensor data for throttle if option is enabled
                     if (settings[1]) {
                         throttleLevelSlider.setProgress((int) (event.values[2] * 1.6), true);
                     }
@@ -248,7 +258,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
         angleDisplay.setText(String.format("%s", i));
 
         int positionCenter = getPositionCenter(kart);
-        if (isSteeringInverted(kart) == kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition)) {
+        if (isSteeringEndContactLeft(kart) ^ kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition)) {
             if (i <= positionCenter) {
                 steeringBarLeft.setProgress(positionCenter - kart.getSteeringPosition(), true);
                 steeringBarRight.setProgress(0, true);
@@ -310,14 +320,14 @@ public class MyKartRemote extends AbstractKartControlActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Configure Phone");
 
-        final boolean[] checkItems = settings.clone();
+        final boolean[] checkedItems = settings.clone();
 
         // Add a checkbox list
-        builder.setMultiChoiceItems(checkboxes, checkItems, new DialogInterface.OnMultiChoiceClickListener() {
+        builder.setMultiChoiceItems(checkboxes, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which, boolean isChecked) {
                 // Save the checked item into the list
-                checkItems[which] = isChecked;
+                checkedItems[which] = isChecked;
             }
         });
 
@@ -326,7 +336,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Apply settings only after 'OK' has been pressed
-                settings = checkItems.clone();
+                settings = checkedItems.clone();
 
                 if (!settings[0] || settings[2]) {
                     steeringAngleSlider.setProgress(getPositionCenter(kart));
@@ -366,19 +376,22 @@ public class MyKartRemote extends AbstractKartControlActivity {
         }
     }
 
+    // Returns the center of the steering position. Made because it was used a lot.
     protected int getPositionCenter(Kart kart) {
         return kart.setup().steeringMaxPosition() / 2;
     }
-
+    
+    // Sets the position, depending where the zero (= steering end contact) is.
     protected void setSteeringPosition (Kart kart, int i) {
-        if (!isSteeringInverted(kart)) {
+        if (!isSteeringEndContactLeft(kart)) {
             kart.setSteeringPosition(kart.setup().steeringMaxPosition() - i);
         } else {
             kart.setSteeringPosition(i);
         }
     }
 
-    protected boolean isSteeringInverted (Kart kart) {
+    // Returns where the steering end contact position is.
+    protected boolean isSteeringEndContactLeft (Kart kart) {
         return kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition);
     }
 
@@ -402,6 +415,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
                 };
 
                 LEDLeft.schedulePeriodically(TIMER_BLINKER);
+                break;
             case 1:
                 kart.setLed(3, true);
 
@@ -438,6 +452,8 @@ public class MyKartRemote extends AbstractKartControlActivity {
                 };
 
                 LEDBoth.schedulePeriodically(TIMER_BLINKER);
+                break;
+            default:
         }
     }
 }
