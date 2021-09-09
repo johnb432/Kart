@@ -164,7 +164,7 @@
         android:layout_height="20dp"
         android:layout_marginTop="65dp"
         android:background="#73D8BD92"
-        android:foregroundTint="#FF4800"
+        android:foregroundTint="#D55827"
         android:indeterminate="false"
         android:indeterminateTint="#4CAF50"
         android:max="100"

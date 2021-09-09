@@ -11,6 +11,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -94,8 +95,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
         displaySpeed.schedulePeriodically(TIMER_INTERVAL * 1000);
 
         // Add a listener to see when registers change.
-        // "Feature": If kart does nothing aside from updating either the hall sensor or the distance sensor (others haven't been verified),
-        // the listener does not trigger correctly.
+        // "Feature": If kart does nothing aside from updating either the hall sensor or the distance sensor (others haven't been verified), the listener does not trigger correctly.
         kart.addStatusRegisterListener(new KartStatusRegisterListener() {
             @SuppressLint("DefaultLocale")
             @Override
@@ -126,7 +126,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
             public void onStopTrackingTouch(SeekBar seekBar) {
                 // If the revert option is enabled, put the thumb back to neutral
-                if (settings[2]) {
+                if (isRevertSteeringOn()) {
                     seekBar.setProgress(getPositionCenter(kart), true);
                 }
             }
@@ -149,7 +149,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
             public void onStopTrackingTouch(SeekBar seekBar) {
                 // If the revert option is enabled, put the thumb back to neutral
-                if (settings[3]) {
+                if (isRevertThrottleOn()) {
                     seekBar.setProgress(0, true);
                 }
             }
@@ -199,7 +199,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onClick(View v) {
                 // Turn off all previous timers and turn signals
                 blinkerLeft.setChecked(false);
-                settings[4] = false;
+                setDangerSignal(false);
 
                 turnOnBlinker(1);
             }
@@ -211,7 +211,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onClick(View v) {
                 // Turn off all previous timers and turn signals
                 blinkerRight.setChecked(false);
-                settings[4] = false;
+                setDangerSignal(false);
 
                 turnOnBlinker(0);
             }
@@ -224,12 +224,12 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public final void onSensorChanged(SensorEvent event) {
                 if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                     // Use sensor data for steering if option is enabled
-                    if (settings[0]) {
+                    if (isAccelerometerSteeringOn()) {
                         steeringAngleSlider.setProgress((int) (event.values[1]) * ((isSteeringEndContactLeft(kart)) ? 30 : -30) + getPositionCenter(kart), true);
                     }
 
                     // Use sensor data for throttle if option is enabled
-                    if (settings[1]) {
+                    if (isAccelerometerThrottleOn()) {
                         throttleLevelSlider.setProgress((int) (event.values[2] * 1.6), true);
                     }
                 }
@@ -258,7 +258,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
         angleDisplay.setText(String.format("%s", i));
 
         int positionCenter = getPositionCenter(kart);
-        if (isSteeringEndContactLeft(kart) ^ kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition)) {
+        if (isSteeringEndContactLeft(kart) == kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition)) {
             if (i <= positionCenter) {
                 steeringBarLeft.setProgress(positionCenter - kart.getSteeringPosition(), true);
                 steeringBarRight.setProgress(0, true);
@@ -338,15 +338,15 @@ public class MyKartRemote extends AbstractKartControlActivity {
                 // Apply settings only after 'OK' has been pressed
                 settings = checkedItems.clone();
 
-                if (!settings[0] || settings[2]) {
+                if (!isAccelerometerSteeringOn() || isRevertSteeringOn()) {
                     steeringAngleSlider.setProgress(getPositionCenter(kart));
                 }
 
-                if (!settings[1] || settings[3]) {
+                if (!isAccelerometerThrottleOn() || isRevertThrottleOn()) {
                     throttleLevelSlider.setProgress(0);
                 }
 
-                if (settings[4]) {
+                if (isDangerSignalOn()) {
                     blinkerLeft.setChecked(false);
                     blinkerRight.setChecked(false);
 
@@ -393,6 +393,31 @@ public class MyKartRemote extends AbstractKartControlActivity {
     // Returns where the steering end contact position is.
     protected boolean isSteeringEndContactLeft (Kart kart) {
         return kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition);
+    }
+
+    // Getters
+    protected boolean isAccelerometerSteeringOn () {
+        return settings[0];
+    }
+
+    protected boolean isAccelerometerThrottleOn () {
+        return settings[1];
+    }
+
+    protected boolean isRevertSteeringOn () {
+        return settings[2];
+    }
+
+    protected boolean isRevertThrottleOn () {
+        return settings[3];
+    }
+
+    protected boolean isDangerSignalOn () {
+        return settings[4];
+    }
+
+    protected void setDangerSignal (boolean b) {
+        settings[4] = b;
     }
 
     protected void turnOnBlinker(int mode) {
@@ -443,7 +468,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
                         kart.toggleLed(2);
                         kart.toggleLed(3);
 
-                        if (!settings[4]) {
+                        if (!isDangerSignalOn()) {
                             kart.setLed(2, false);
                             kart.setLed(3, false);
                             this.stop();
