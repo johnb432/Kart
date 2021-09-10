@@ -18,5 +18,5 @@
 
     <string name="background">Background</string>
 
-    <string name="distance">Distance to object</string>
+    <string name="distance">Distance front</string>
 </resources>

@@ -31,31 +31,31 @@
         android:id="@+id/blinkerLeft"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
         android:layout_marginTop="3dp"
         android:background="#73D8BD92"
         android:minHeight="48dp"
         android:text="@string/blinkerLeft"
         app:layout_constraintStart_toStartOf="@+id/guideline4"
-        app:layout_constraintTop_toBottomOf="@+id/recenterSteering"
+        app:layout_constraintTop_toBottomOf="@+id/lightSwitch"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <TextView
         android:id="@+id/distance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="70dp"
+        android:layout_marginEnd="40dp"
         android:background="#73D8BD92"
         android:text="@string/distance"
         android:textColor="#000000"
         app:layout_constraintEnd_toStartOf="@+id/guideline5"
-        app:layout_constraintTop_toBottomOf="@+id/batteryLevelBar" />
+        app:layout_constraintTop_toTopOf="@+id/guideline2" />
 
     <TextView
         android:id="@+id/distanceDisplay"
         android:layout_width="37dp"
         android:layout_height="20dp"
-        android:layout_marginEnd="40dp"
+        android:layout_marginEnd="70dp"
         android:background="#73D8BD92"
         android:text="@string/zero"
         android:textAlignment="center"
@@ -132,13 +132,13 @@
 
     <TextView
         android:id="@+id/batteryVoltage"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="45dp"
+        android:layout_marginTop="10dp"
         android:background="#73D8BD92"
         android:text="@string/battery"
         android:textColor="#000000"
-        app:layout_constraintEnd_toStartOf="@+id/guideline5"
+        app:layout_constraintStart_toEndOf="@+id/openPhoneSettings"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ProgressBar
@@ -160,9 +160,8 @@
     <ProgressBar
         android:id="@+id/batteryLevelBar"
         style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="97dp"
+        android:layout_width="100dp"
         android:layout_height="20dp"
-        android:layout_marginTop="65dp"
         android:background="#73D8BD92"
         android:foregroundTint="#D55827"
         android:indeterminate="false"
@@ -171,8 +170,8 @@
         android:progress="0"
         android:progressTint="#4CAF50"
         android:secondaryProgressTint="#FF0000"
-        app:layout_constraintEnd_toStartOf="@+id/guideline5"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/batteryVoltage"
+        app:layout_constraintTop_toBottomOf="@+id/batteryVoltage" />
 
     <ProgressBar
         android:id="@+id/steeringBarLeft"
@@ -256,23 +255,13 @@
         android:id="@+id/lightSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="12dp"
         android:background="#73D8BD92"
         android:minHeight="48dp"
         android:text="@string/lights"
-        app:layout_constraintStart_toEndOf="@+id/recenterSteering"
+        app:layout_constraintStart_toStartOf="@+id/guideline4"
         app:layout_constraintTop_toBottomOf="@+id/openPhoneSettings"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
-
-    <Button
-        android:id="@+id/recenterSteering"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="@string/recenter_steering"
-        app:layout_constraintStart_toStartOf="@+id/guideline4"
-        app:layout_constraintTop_toBottomOf="@+id/openKartSettings" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline2"

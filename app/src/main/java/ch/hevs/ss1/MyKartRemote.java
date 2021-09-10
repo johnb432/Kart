@@ -11,7 +11,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -58,6 +57,9 @@ public class MyKartRemote extends AbstractKartControlActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_kart_remote);
 
+        kart.setup().steeringMaxPosition(600);
+        kart.setup().steeringCenterPosition(300);
+
         final TextView speedDisplay = findViewById(R.id.speedDisplay);
         final TextView throttleDisplay = findViewById(R.id.throttleDisplay);
         final TextView steeringDisplay = findViewById(R.id.steeringDisplay);
@@ -97,7 +99,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
         // Add a listener to see when registers change.
         // "Feature": If kart does nothing aside from updating either the hall sensor or the distance sensor (others haven't been verified), the listener does not trigger correctly.
         kart.addStatusRegisterListener(new KartStatusRegisterListener() {
-            @SuppressLint("DefaultLocale")
+            @SuppressLint({"DefaultLocale", "SetTextI18n"})
             @Override
             public void statusRegisterHasChanged(Kart kart, KartStatusRegister kartStatusRegister, int i) {
                 switch (kartStatusRegister) {
@@ -107,7 +109,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
                         break;
                     case DistanceSensor:
                         // Distance in cm; see http://wiki.hevs.ch/fsi/index.php5/Kart/sensors/HCSR04
-                        distanceDisplay.setText(String.format("%.2f cm", 0.0017 * i));
+                        distanceDisplay.setText(String.format("%.2f", 0.0017 * i) + " cm");
                         break;
                     default:
                 }
@@ -157,13 +159,6 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
         throttleLevelSlider.setMax(kart.setup().driveMaxSpeed());
         throttleLevelSlider.setMin(-1 * kart.setup().driveMaxSpeed());
-
-        findViewById(R.id.recenterSteering).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Recenter the steering
-                steeringAngleSlider.setProgress(getPositionCenter(kart), true);
-            }
-        });
 
         // Button to open kart configuration
         findViewById(R.id.openKartSettings).setOnClickListener(new View.OnClickListener() {
@@ -369,6 +364,9 @@ public class MyKartRemote extends AbstractKartControlActivity {
         if (hasFocus && settingsOpened) {
             settingsOpened = false;
 
+            kart.setup().steeringMaxPosition(600);
+            kart.setup().steeringCenterPosition(300);
+
             // Set the max of progress bars and sliders
             steeringBarLeft.setMax(getPositionCenter(kart));
             steeringBarRight.setMax(getPositionCenter(kart));
@@ -380,7 +378,7 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
     // Returns the center of the steering position. Made because it was used a lot.
     protected int getPositionCenter(Kart kart) {
-        return kart.setup().steeringMaxPosition() / 2;
+        return 300;//kart.setup().steeringMaxPosition() / 2;
     }
     
     // Sets the position, depending where the zero (= steering end contact) is.
