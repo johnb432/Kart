@@ -30,7 +30,7 @@ import ch.hevs.kart.KartStatusRegisterListener;
 
 // For manifest values, see https://developer.android.com/guide/topics/manifest/activity-element.html#screen
 public class MyKartRemote extends AbstractKartControlActivity {
-    private final int STEERING_POS_MAX = 1000;
+    private final int STEERING_POS_MAX = 600;
     private final int STEERING_POS_MIDDLE = STEERING_POS_MAX / 2;
 
     private long oldTime = 0;
@@ -145,9 +145,9 @@ public class MyKartRemote extends AbstractKartControlActivity {
         resetSteering.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
-                kart.resetSteering();
+                //kart.resetSteering();
                 //kart.setSteeringPosition(STEERING_POS_MIDDLE);
-                //steeringAngleSlider.setProgress(STEERING_POS_MIDDLE, true);
+                steeringAngleSlider.setProgress(STEERING_POS_MIDDLE, true);
                 Log.d("resetSteering", "Reset steering");
             }
         });
@@ -158,15 +158,6 @@ public class MyKartRemote extends AbstractKartControlActivity {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
                 showKartSetupPopup();
-            }
-        });
-
-        // Button to open kart configuration
-        final Button openSettings2 = findViewById(R.id.openSettings);
-        openSettings.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Code here executes on main thread after user presses button
-                showKartSetup2Popup(v);
             }
         });
 
@@ -253,29 +244,4 @@ public class MyKartRemote extends AbstractKartControlActivity {
 
     @Override
     public void message(Kart kart, String s) {}
-
-    protected void showKartConfigurePopup() {
-        // Setup the alert builder
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Configure Kart");
-
-        // Add a checkbox list
-        String[] animals = {"horse", "cow", "camel", "sheep", "goat"};
-        boolean[] checkedItems = {true, false, false, true, false};
-        builder.setMultiChoiceItems(animals, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                // User checked or unchecked a box
-            }
-        });
-
-        // Add OK and Cancel buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // user clicked OK
-            }
-        });
-        builder.setNegativeButton("Cancel", null);
-    }
 }
