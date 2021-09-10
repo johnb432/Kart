@@ -100,12 +100,12 @@ public class MyKartRemote extends AbstractKartControlActivity {
             @SuppressLint("DefaultLocale")
             @Override
             public void statusRegisterHasChanged(Kart kart, KartStatusRegister kartStatusRegister, int i) {
-                switch (kartStatusRegister.name()) {
-                    case "HallSensorCounter1":
+                switch (kartStatusRegister) {
+                    case HallSensorCounter1:
                         // Count each detection of the magnet
                         hallCounter++;
                         break;
-                    case "DistanceSensor":
+                    case DistanceSensor:
                         // Distance in cm; see http://wiki.hevs.ch/fsi/index.php5/Kart/sensors/HCSR04
                         distanceDisplay.setText(String.format("%.2f cm", 0.0017 * i));
                         break;
@@ -258,21 +258,23 @@ public class MyKartRemote extends AbstractKartControlActivity {
         angleDisplay.setText(String.format("%s", i));
 
         int positionCenter = getPositionCenter(kart);
+        int pos = Math.abs(kart.getSteeringPosition() - positionCenter);
+
         if (isSteeringEndContactLeft(kart) == kart.setup().hardwareSettings().contains(KartHardwareSettings.InverseSteeringEndContactPosition)) {
-            if (i <= positionCenter) {
-                steeringBarLeft.setProgress(positionCenter - kart.getSteeringPosition(), true);
+            if (i >= positionCenter) {
+                steeringBarLeft.setProgress(pos, true);
                 steeringBarRight.setProgress(0, true);
             } else {
                 steeringBarLeft.setProgress(0, true);
-                steeringBarRight.setProgress(kart.getSteeringPosition() - positionCenter, true);
+                steeringBarRight.setProgress(pos, true);
             }
         } else {
-            if (i >= positionCenter) {
-                steeringBarLeft.setProgress(positionCenter - kart.getSteeringPosition(), true);
+            if (i <= positionCenter) {
+                steeringBarLeft.setProgress(pos, true);
                 steeringBarRight.setProgress(0, true);
             } else {
                 steeringBarLeft.setProgress(0, true);
-                steeringBarRight.setProgress(kart.getSteeringPosition() - positionCenter, true);
+                steeringBarRight.setProgress(pos, true);
             }
         }
     }
